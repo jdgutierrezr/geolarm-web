@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+:root {
+  /* Tipografía base */
+  --font-poppins: "Poppins", sans-serif;
+
+  /* Azul Marino: Fondo principal / navegación */
+  --marine-50: #f1f5f9;
+  --marine-100: #e2e8f0;
+  --marine-200: #cbd5e1;
+  --marine-300: #94a3b8;
+  --marine-400: #475569;
+  --marine-500: #1e293b; /* Color principal */
+  --marine-600: #0f172a;
+  --marine-700: #020617;
+  --marine-800: #05070c;
+  --marine-900: #03050a;
+
+  /* Azul Cobalto: Mapa / rutas / pines inactivos */
+  --cobalt-50: #eff6ff;
+  --cobalt-100: #dbeafe;
+  --cobalt-200: #bfdbfe;
+  --cobalt-300: #93c5fd;
+  --cobalt-400: #60a5fa;
+  --cobalt-500: #2563eb; /* Color principal */
+  --cobalt-600: #1d4ed8;
+  --cobalt-700: #1e40af;
+  --cobalt-800: #172554;
+  --cobalt-900: #0b1b3a;
+
+  /* Naranja Coral: Alarma / destino / alertas */
+  --coral-50: #fff4f0;
+  --coral-100: #ffe4d6;
+  --coral-200: #ffd5cc;
+  --coral-300: #ffb8a3;
+  --coral-400: #ffa38f;
+  --coral-500: #ff6b4a; /* Color principal */
+  --coral-600: #d94324;
+  --coral-700: #b63a1a;
+  --coral-800: #6e1e10;
+  --coral-900: #4a120a;
+
+  /* Blanco / Gris Claro: Contenido / tarjetas / iconos */
+  --surface-50: #ffffff;
+  --surface-100: #f9fafb;
+  --surface-200: #f3f4f6;
+  --surface-300: #e5e7eb;
+  --surface-400: #d1d5db;
+  --surface-500: #f8fafc; /* Color principal */
+  --surface-600: #cbd5e1;
+  --surface-700: #94a3b8;
+  --surface-800: #64748b;
+  --surface-900: #475569;
+
+  /* Negro / Escala Neutra: Fondos oscuros / texto / contraste */
+  --dark-50: #ffffff;
+  --dark-100: #f9fafb;
+  --dark-200: #f3f4f6;
+  --dark-300: #e5e7eb;
+  --dark-400: #d1d5db;
+  --dark-500: #94a3b8;
+  --dark-600: #64748b;
+  --dark-700: #475569;
+  --dark-800: #1e293b;
+  --dark-900: #0f172a;
+  --dark-black: #000000;
+
+  /* Verde: Confirmaciones / estados exitosos */
+  --green-50: #ecfdf5;
+  --green-100: #d1fae5;
+  --green-200: #a7f3d0;
+  --green-300: #6ee7b7;
+  --green-400: #34d399;
+  --green-500: #22c55e; /* Color principal */
+  --green-600: #059669;
+  --green-700: #047857;
+  --green-800: #065f46;
+  --green-850: #064e3b;
+  --green-900: #062e2a;
+
+  /* Amarillo: Advertencias / precauciones */
+  --yellow-50: #fffbeb;
+  --yellow-100: #fef3c7;
+  --yellow-200: #fde68a;
+  --yellow-300: #fcd34d;
+  --yellow-400: #fbbf24;
+  --yellow-500: #eab308; /* Color principal */
+  --yellow-600: #d97706;
+  --yellow-700: #b45309;
+  --yellow-800: #92400e;
+  --yellow-850: #78350f;
+  --yellow-900: #5b2c0a;
+
+  /* Rojo: Errores / acciones destructivas */
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-300: #fca5a5;
+  --red-400: #f87171;
+  --red-500: #ef4444; /* Color principal */
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+  --red-850: #7f1d1d;
+  --red-900: #5b0a0a;
+
+  /* Azul-Morado: Estados informativos / notificaciones */
+  --purple-50: #f5f3ff;
+  --purple-100: #e9d5ff;
+  --purple-200: #ddd6fe;
+  --purple-300: #c4b5fd;
+  --purple-400: #a78bfa;
+  --purple-500: #8b5cf6; /* Color principal */
+  --purple-600: #7c3aed;
+  --purple-700: #6d28d9;
+  --purple-800: #5b21b6;
+  --purple-850: #4c1d95;
+  --purple-900: #3b0f6b;
+}
+
+/* Extensión de utilidades en Tailwind v4 */
+@theme {
+  --font-sans: var(--font-poppins);
+
+  /* Entrada de modales: la cortina se desvanece y el contenido sube. */
+  --animate-curtain-in: curtain-in 250ms ease-out;
+  --animate-pop-in: pop-in 250ms ease-out;
+
+  @keyframes curtain-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.96);
+    }
+  }
+
+  --color-marine-50: var(--marine-50);
+  --color-marine-100: var(--marine-100);
+  --color-marine-200: var(--marine-200);
+  --color-marine-300: var(--marine-300);
+  --color-marine-400: var(--marine-400);
+  --color-marine-500: var(--marine-500);
+  --color-marine-600: var(--marine-600);
+  --color-marine-700: var(--marine-700);
+  --color-marine-800: var(--marine-800);
+  --color-marine-900: var(--marine-900);
+
+  --color-cobalt-50: var(--cobalt-50);
+  --color-cobalt-100: var(--cobalt-100);
+  --color-cobalt-200: var(--cobalt-200);
+  --color-cobalt-300: var(--cobalt-300);
+  --color-cobalt-400: var(--cobalt-400);
+  --color-cobalt-500: var(--cobalt-500);
+  --color-cobalt-600: var(--cobalt-600);
+  --color-cobalt-700: var(--cobalt-700);
+  --color-cobalt-800: var(--cobalt-800);
+  --color-cobalt-900: var(--cobalt-900);
+
+  --color-coral-50: var(--coral-50);
+  --color-coral-100: var(--coral-100);
+  --color-coral-200: var(--coral-200);
+  --color-coral-300: var(--coral-300);
+  --color-coral-400: var(--coral-400);
+  --color-coral-500: var(--coral-500);
+  --color-coral-600: var(--coral-600);
+  --color-coral-700: var(--coral-700);
+  --color-coral-800: var(--coral-800);
+  --color-coral-900: var(--coral-900);
+
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-600: var(--surface-600);
+  --color-surface-700: var(--surface-700);
+  --color-surface-800: var(--surface-800);
+  --color-surface-900: var(--surface-900);
+
+  --color-dark-50: var(--dark-50);
+  --color-dark-100: var(--dark-100);
+  --color-dark-200: var(--dark-200);
+  --color-dark-300: var(--dark-300);
+  --color-dark-400: var(--dark-400);
+  --color-dark-500: var(--dark-500);
+  --color-dark-600: var(--dark-600);
+  --color-dark-700: var(--dark-700);
+  --color-dark-800: var(--dark-800);
+  --color-dark-900: var(--dark-900);
+  --color-dark-black: var(--dark-black);
+
+  --color-brand-green-50: var(--green-50);
+  --color-brand-green-100: var(--green-100);
+  --color-brand-green-200: var(--green-200);
+  --color-brand-green-300: var(--green-300);
+  --color-brand-green-400: var(--green-400);
+  --color-brand-green-500: var(--green-500);
+  --color-brand-green-600: var(--green-600);
+  --color-brand-green-700: var(--green-700);
+  --color-brand-green-800: var(--green-800);
+  --color-brand-green-850: var(--green-850);
+  --color-brand-green-900: var(--green-900);
+
+  --color-brand-yellow-50: var(--yellow-50);
+  --color-brand-yellow-100: var(--yellow-100);
+  --color-brand-yellow-200: var(--yellow-200);
+  --color-brand-yellow-300: var(--yellow-300);
+  --color-brand-yellow-400: var(--yellow-400);
+  --color-brand-yellow-500: var(--yellow-500);
+  --color-brand-yellow-600: var(--yellow-600);
+  --color-brand-yellow-700: var(--yellow-700);
+  --color-brand-yellow-800: var(--yellow-800);
+  --color-brand-yellow-850: var(--yellow-850);
+  --color-brand-yellow-900: var(--yellow-900);
+
+  --color-brand-red-50: var(--red-50);
+  --color-brand-red-100: var(--red-100);
+  --color-brand-red-200: var(--red-200);
+  --color-brand-red-300: var(--red-300);
+  --color-brand-red-400: var(--red-400);
+  --color-brand-red-500: var(--red-500);
+  --color-brand-red-600: var(--red-600);
+  --color-brand-red-700: var(--red-700);
+  --color-brand-red-800: var(--red-800);
+  --color-brand-red-850: var(--red-850);
+  --color-brand-red-900: var(--red-900);
+
+  --color-brand-purple-50: var(--purple-50);
+  --color-brand-purple-100: var(--purple-100);
+  --color-brand-purple-200: var(--purple-200);
+  --color-brand-purple-300: var(--purple-300);
+  --color-brand-purple-400: var(--purple-400);
+  --color-brand-purple-500: var(--purple-500);
+  --color-brand-purple-600: var(--purple-600);
+  --color-brand-purple-700: var(--purple-700);
+  --color-brand-purple-800: var(--purple-800);
+  --color-brand-purple-850: var(--purple-850);
+  --color-brand-purple-900: var(--purple-900);
+}
+
+body {
+  font-family: var(--font-poppins);
+  background-color: var(--marine-500);
+  color: var(--surface-50);
+}
+
+/* Leaflet impone su propia fuente; que herede Poppins. */
+.leaflet-container {
+  font-family: inherit;
+}
