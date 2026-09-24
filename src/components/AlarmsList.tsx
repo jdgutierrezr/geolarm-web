@@ -87,7 +87,7 @@ export default function AlarmsList(props: AlarmsListProps) {
                       current === alarm.id ? null : alarm.id,
                     )
                   }
-                  className={`group flex w-full items-start gap-3 p-3 text-left transition-colors cursor-pointer shadow-md ${
+                  className={`group flex w-full min-w-0 items-start gap-3 p-3 text-left transition-colors cursor-pointer shadow-md ${
                     isSelected
                       ? "bg-coral-500"
                       : "bg-surface-500 hover:bg-coral-50"
@@ -97,10 +97,10 @@ export default function AlarmsList(props: AlarmsListProps) {
                     className="mt-1.5 size-8 shrink-0 rounded-full shadow-[inset_2px_2px_2px_0_rgba(0,0,0,0.5)]"
                     style={{ backgroundColor: alarm.color }}
                   />
-                  <div className="flex w-full items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1 flex-col">
+                  <div className="flex min-w-0 w-full items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <span
-                        className={`font-semibold ${
+                        className={`block truncate font-semibold ${
                           isSelected ? "text-dark-50" : "text-dark-900"
                         }`}
                       >
@@ -120,13 +120,13 @@ export default function AlarmsList(props: AlarmsListProps) {
                       <ChevronRight
                         size={40}
                         strokeWidth={1}
-                        className="ml-auto text-marine-300 transition-colors group-hover:text-coral-500"
+                        className="ml-auto shrink-0 text-marine-300 transition-colors group-hover:text-coral-500"
                       />
                     ) : (
                       <ChevronRight
                         size={40}
                         strokeWidth={1}
-                        className="ml-auto text-transparent"
+                        className="ml-auto shrink-0 text-transparent"
                         aria-hidden="true"
                       />
                     )}
