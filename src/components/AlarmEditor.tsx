@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { ArrowLeft, Info, MapPin, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, type SubmitEvent } from "react";
+import { startTransition, useEffect, useState, type SubmitEvent } from "react";
 import AlarmMap from "@/components/AlarmMap";
-import { alarms, getAlarmPoints } from "@/data/alarms";
+import NavBar from "@/components/NavBar";
+import { alarms as defaultAlarms, getAlarmPoints } from "@/data/alarms";
+import { getStoredAlarms, saveAlarms, useAlarms } from "@/lib/alarmStorage";
 import type { LatLng } from "@/lib/geo";
 
 const days = ["L", "M", "I", "J", "V", "S", "D"];
@@ -16,7 +18,8 @@ type AlarmEditorProps = Readonly<{ mode: "create" | "edit"; alarmId?: string }>;
 export default function AlarmEditor(props: AlarmEditorProps) {
   const { mode, alarmId } = props;
   const router = useRouter();
-  const existingAlarm = alarms.find(({ id }) => id === alarmId) ?? alarms[0];
+  const alarms = useAlarms();
+  const existingAlarm = alarms.find(({ id }) => id === alarmId) ?? alarms[0] ?? defaultAlarms[0];
   const [name, setName] = useState(mode === "edit" ? existingAlarm.name : "");
   const initialPoint =
     existingAlarm.location.type === "exact"
@@ -35,8 +38,32 @@ export default function AlarmEditor(props: AlarmEditorProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [locationError, setLocationError] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>(
-    mode === "edit" ? ["L", "I", "J"] : [],
+    mode === "edit" ? existingAlarm.repeatDays ?? ["L", "I", "J"] : [],
   );
+
+  useEffect(() => {
+    if (mode !== "edit") return;
+
+    startTransition(() => {
+      setName(existingAlarm.name);
+      setRadius(existingAlarm.radius);
+      setColor(existingAlarm.color);
+      setSelectedDays(existingAlarm.repeatDays ?? ["L", "I", "J"]);
+      setPosition(
+        existingAlarm.location.type === "exact"
+          ? existingAlarm.location.position
+          : getAlarmPoints(existingAlarm)[0]?.position ?? {
+              lat: 4.65,
+              lng: -74.06,
+            },
+      );
+      setAddress(
+        existingAlarm.location.type === "exact"
+          ? existingAlarm.location.address
+          : "",
+      );
+    });
+  }, [existingAlarm, mode]);
 
   const toggleDay = (day: string) => {
     setSelectedDays((current) =>
@@ -75,16 +102,38 @@ export default function AlarmEditor(props: AlarmEditorProps) {
 
   const save = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const nextAlarm = {
+      id: mode === "edit" ? existingAlarm.id : crypto.randomUUID(),
+      name: name.trim(),
+      color,
+      radius,
+      repeatDays: selectedDays,
+      location: {
+        type: "exact" as const,
+        address: address.trim(),
+        position: position ?? initialPoint,
+      },
+    };
+    const storedAlarms = getStoredAlarms();
+    const nextAlarms =
+      mode === "edit"
+        ? storedAlarms.map((alarm) =>
+            alarm.id === nextAlarm.id ? nextAlarm : alarm,
+          )
+        : [...storedAlarms, nextAlarm];
+    saveAlarms(nextAlarms);
     router.push("/");
   };
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col bg-surface-50 text-dark-900">
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto p-4 sm:p-8 lg:flex-row lg:gap-10 lg:p-12 xl:p-20">
-        <form
-          onSubmit={save}
-          className="flex w-full shrink-0 flex-col justify-center gap-5 lg:w-[min(52%,620px)] lg:p-5"
-        >
+    <>
+      <NavBar />
+      <main className="flex min-h-0 flex-1 flex-col bg-surface-50 text-dark-900">
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-auto p-4 sm:p-8 lg:flex-row lg:gap-10 lg:p-12 xl:p-20">
+          <form
+            onSubmit={save}
+            className="flex w-full shrink-0 flex-col justify-center gap-5 lg:w-[min(52%,620px)] lg:p-5"
+          >
           <Link
             href="/"
             className="flex w-fit items-center gap-3 px-1 text-xl font-medium text-coral-500 transition-colors hover:text-coral-600"
@@ -218,23 +267,25 @@ export default function AlarmEditor(props: AlarmEditorProps) {
               {mode === "create" ? "Guardar alarma" : "Guardar cambios"}
             </button>
           </div>
-        </form>
+          </form>
 
-        <div className="relative flex min-h-[420px] min-w-0 flex-1 overflow-hidden rounded-xl bg-surface-300">
-          <AlarmMap
-            selectedId={mode === "edit" ? existingAlarm.id : null}
-            setSelectedId={() => undefined}
-            previewPosition={position}
-            previewRadius={radius}
-            previewColor={color}
-            onMapClick={(nextPosition) => {
-              setPosition(nextPosition);
-              setLocationError("");
-              setAddress(`Punto seleccionado (${nextPosition.lat.toFixed(5)}, ${nextPosition.lng.toFixed(5)})`);
-            }}
-          />
+          <div className="relative flex min-h-[420px] min-w-0 flex-1 overflow-hidden rounded-xl bg-surface-300">
+            <AlarmMap
+              alarms={alarms}
+              selectedId={mode === "edit" ? existingAlarm.id : null}
+              setSelectedId={() => undefined}
+              previewPosition={position}
+              previewRadius={radius}
+              previewColor={color}
+              onMapClick={(nextPosition) => {
+                setPosition(nextPosition);
+                setLocationError("");
+                setAddress(`Punto seleccionado (${nextPosition.lat.toFixed(5)}, ${nextPosition.lng.toFixed(5)})`);
+              }}
+            />
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

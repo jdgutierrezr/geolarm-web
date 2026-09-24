@@ -3,7 +3,7 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Search, Plus, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { alarms, categoryLabels } from "@/data/alarms";
+import { categoryLabels, type Alarm } from "@/data/alarms";
 
 /** Ancho en px. El mapa lo usa para no dejar puntos escondidos debajo. */
 export const ALARMS_LIST_WIDTH = 384;
@@ -13,12 +13,13 @@ const normalize = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 type AlarmsListProps = Readonly<{
+  alarms: Alarm[];
   selectedId: string | null;
   setSelectedId: Dispatch<SetStateAction<string | null>>;
 }>;
 
 export default function AlarmsList(props: AlarmsListProps) {
-  const { selectedId, setSelectedId } = props;
+  const { alarms, selectedId, setSelectedId } = props;
   const [query, setQuery] = useState("");
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
 

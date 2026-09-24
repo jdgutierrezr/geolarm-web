@@ -16,6 +16,8 @@ export type Alarm = {
   color: string;
   /** Radio de activación en metros, alrededor de cada punto. */
   radius: number;
+  /** Días de repetición, usando las letras visibles en el editor. */
+  repeatDays: string[];
   location: AlarmLocation;
 };
 
@@ -38,6 +40,7 @@ export const alarms: Alarm[] = [
     name: "Entregar tesis",
     color: "#0d9488",
     radius: 300,
+    repeatDays: ["L", "I", "J"],
     location: {
       type: "exact",
       address: "Cra. 1 #18a-12, Bogotá",
@@ -49,6 +52,7 @@ export const alarms: Alarm[] = [
     name: "Sacar al perro",
     color: "#7f1d1d",
     radius: 150,
+    repeatDays: ["L", "I", "J"],
     location: {
       type: "exact",
       address: "Calle 152 #46, Bogotá",
@@ -60,6 +64,7 @@ export const alarms: Alarm[] = [
     name: "Hablar con el jefe",
     color: "#16a34a",
     radius: 200,
+    repeatDays: ["L", "I", "J"],
     location: {
       type: "exact",
       address: "Cra. 7 #71-21, Bogotá",
@@ -71,6 +76,7 @@ export const alarms: Alarm[] = [
     name: "Comprar leche",
     color: "#eab308",
     radius: 100,
+    repeatDays: ["L", "I", "J"],
     location: { type: "nearby", category: "supermarket" },
   },
   {
@@ -78,6 +84,7 @@ export const alarms: Alarm[] = [
     name: "Entrenar",
     color: "#9333ea",
     radius: 80,
+    repeatDays: ["L", "I", "J"],
     location: { type: "nearby", category: "gym" },
   },
 ];

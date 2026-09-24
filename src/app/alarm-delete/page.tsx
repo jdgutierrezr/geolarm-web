@@ -3,18 +3,21 @@
 import Link from "next/link";
 import { ArrowLeft, MapPin, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { alarms, categoryLabels } from "@/data/alarms";
+import { Suspense } from "react";
+import { alarms as defaultAlarms, categoryLabels } from "@/data/alarms";
 import AlarmMap from "@/components/AlarmMap";
+import { getStoredAlarms, saveAlarms, useAlarms } from "@/lib/alarmStorage";
 
-export default function DeleteAlarmPage() {
+function DeleteAlarmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const alarm = alarms.find(({ id }) => id === searchParams.get("id")) ?? alarms[0];
+  const alarms = useAlarms();
+  const alarm = alarms.find(({ id }) => id === searchParams.get("id")) ?? alarms[0] ?? defaultAlarms[0];
   const location = alarm.location.type === "exact" ? alarm.location.address : categoryLabels[alarm.location.category];
 
   return (
     <main className="relative flex min-h-0 flex-1 overflow-hidden bg-surface-200 text-dark-900">
-      <AlarmMap selectedId={alarm.id} setSelectedId={() => undefined} />
+      <AlarmMap alarms={alarms} selectedId={alarm.id} setSelectedId={() => undefined} />
       <section className="absolute left-1/2 top-1/2 z-1000 w-[min(92vw,560px)] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-surface-50 p-6 shadow-2xl sm:p-8">
         <Link href="/" className="mb-8 flex w-fit items-center gap-3 text-xl font-medium text-coral-500 hover:text-coral-600">
           <ArrowLeft size={18} />
@@ -34,12 +37,23 @@ export default function DeleteAlarmPage() {
           <Link href="/" className="flex h-14 flex-1 items-center justify-center rounded-lg bg-marine-500 text-xl font-medium text-dark-50 shadow-[4px_4px_4px_rgb(0_0_0/0.25)] hover:bg-marine-400">
             Cancelar
           </Link>
-          <button type="button" onClick={() => router.push("/")} className="flex h-14 flex-1 items-center justify-center gap-3 rounded-lg bg-red-800 text-xl font-medium text-dark-50 shadow-[4px_4px_4px_rgb(0_0_0/0.25)] hover:bg-red-700">
+          <button type="button" onClick={() => {
+            saveAlarms(getStoredAlarms().filter(({ id }) => id !== alarm.id));
+            router.push("/");
+          }} className="flex h-14 flex-1 items-center justify-center gap-3 rounded-lg bg-red-800 text-xl font-medium text-dark-50 shadow-[4px_4px_4px_rgb(0_0_0/0.25)] hover:bg-red-700">
             <Trash2 size={20} />
             Eliminar
           </button>
         </div>
       </section>
     </main>
+  );
+}
+
+export default function DeleteAlarmPage() {
+  return (
+    <Suspense>
+      <DeleteAlarmContent />
+    </Suspense>
   );
 }

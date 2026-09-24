@@ -24,16 +24,12 @@ import {
 } from "react-leaflet";
 import { LocateFixed } from "lucide-react";
 import { ALARMS_LIST_WIDTH } from "@/components/AlarmsList";
-import { alarms, getAlarmPoints, type AlarmPoint } from "@/data/alarms";
+import { getAlarmPoints, type Alarm, type AlarmPoint } from "@/data/alarms";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import type { LatLng } from "@/lib/geo";
 
-const alarmPoints = alarms.flatMap(getAlarmPoints);
-
 const boundsOf = (points: AlarmPoint[]) =>
   latLngBounds(points.map(({ position }) => [position.lat, position.lng]));
-
-const initialBounds = boundsOf(alarmPoints);
 
 // La lista tapa la franja izquierda: encuadra solo en el área visible.
 const visibleArea: FitBoundsOptions = {
@@ -50,6 +46,7 @@ const locationMessages = {
 };
 
 export type AlarmMapClientProps = {
+  alarms: Alarm[];
   selectedId: string | null;
   setSelectedId: Dispatch<SetStateAction<string | null>>;
   previewPosition?: LatLng | null;
@@ -66,6 +63,7 @@ function MapClickHandler({ onMapClick }: Pick<AlarmMapClientProps, "onMapClick">
 }
 
 export default function AlarmMapClient({
+  alarms,
   selectedId,
   setSelectedId,
   previewPosition = null,
@@ -73,6 +71,7 @@ export default function AlarmMapClient({
   previewColor = "#ff6b4a",
   onMapClick,
 }: AlarmMapClientProps) {
+  const alarmPoints = alarms.flatMap(getAlarmPoints);
   const [map, setMap] = useState<LeafletMap | null>(null);
   const userLocation = useUserLocation();
   // Si la selección vino de un clic en el mapa, el usuario ya está mirando
@@ -92,7 +91,7 @@ export default function AlarmMapClient({
     if (points.length === 0) return;
 
     map.flyToBounds(boundsOf(points), { ...visibleArea, maxZoom: 16 });
-  }, [map, selectedId]);
+  }, [alarms, map, selectedId]);
 
   useEffect(() => {
     if (map && previewPosition) {
@@ -125,7 +124,7 @@ export default function AlarmMapClient({
     <div className="relative flex flex-1 flex-col overflow-hidden">
       <MapContainer
         ref={setMap}
-        bounds={initialBounds}
+        bounds={alarmPoints.length > 0 ? boundsOf(alarmPoints) : undefined}
         boundsOptions={visibleArea}
         zoomControl={false}
         className="flex-1"
