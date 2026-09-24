@@ -2,17 +2,16 @@
 
 import { useEffect } from "react";
 import { Pencil, Trash2, X } from "lucide-react";
+import Link from "next/link";
 import { categoryLabels, getAlarmPoints, type Alarm } from "@/data/alarms";
 
-type AlarmDetailCardProps = {
+type AlarmDetailCardProps = Readonly<{
   alarm: Alarm;
   onClose: () => void;
-};
+}>;
 
-export default function AlarmDetailCard({
-  alarm,
-  onClose,
-}: AlarmDetailCardProps) {
+export default function AlarmDetailCard(props: AlarmDetailCardProps) {
+  const { alarm, onClose } = props;
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -53,20 +52,20 @@ export default function AlarmDetailCard({
       </div>
 
       <div className="flex gap-3">
-        <button
-          type="button"
+        <Link
+          href={`/edit-alarm?id=${alarm.id}`}
           className="flex flex-1 items-center justify-center gap-2 rounded-md bg-cobalt-600 py-2 text-dark-50 shadow-md cursor-pointer transition-all duration-150 hover:bg-cobalt-500 active:scale-[0.98] active:bg-cobalt-700 active:shadow-[inset_4px_4px_4px_0_rgba(0,0,0,0.5)]"
         >
           <Pencil size={18} />
           Editar
-        </button>
-        <button
-          type="button"
+        </Link>
+        <Link
+          href={`/alarm-delete?id=${alarm.id}`}
           className="flex flex-1 items-center justify-center gap-2 rounded-md bg-red-800 py-2 text-dark-50 shadow-md cursor-pointer transition-all duration-150 hover:bg-red-700 active:scale-[0.98] active:bg-red-900 active:shadow-[inset_4px_4px_4px_0_rgba(0,0,0,0.5)]"
         >
           <Trash2 size={18} />
           Eliminar
-        </button>
+        </Link>
       </div>
     </section>
   );

@@ -2,6 +2,7 @@
 
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { Search, Plus, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { alarms, categoryLabels } from "@/data/alarms";
 
 /** Ancho en px. El mapa lo usa para no dejar puntos escondidos debajo. */
@@ -11,15 +12,13 @@ export const ALARMS_LIST_WIDTH = 384;
 const normalize = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-type AlarmsListProps = {
+type AlarmsListProps = Readonly<{
   selectedId: string | null;
   setSelectedId: Dispatch<SetStateAction<string | null>>;
-};
+}>;
 
-export default function AlarmsList({
-  selectedId,
-  setSelectedId,
-}: AlarmsListProps) {
+export default function AlarmsList(props: AlarmsListProps) {
+  const { selectedId, setSelectedId } = props;
   const [query, setQuery] = useState("");
   const itemRefs = useRef(new Map<string, HTMLLIElement>());
 
@@ -137,10 +136,10 @@ export default function AlarmsList({
           })}
         </ul>
       )}
-      <button className="bg-cobalt-600 text-dark-50 flex gap-2 items-center justify-center py-2 rounded-md mt-8 cursor-pointer hover:bg-cobalt-500 active:bg-cobalt-700 active:scale-[0.98] active:shadow-[inset_4px_4px_4px_0_rgba(0,0,0,0.5)] transition-all duration-150">
+      <Link href="/create-alarm" className="bg-cobalt-600 text-dark-50 flex gap-2 items-center justify-center py-2 rounded-md mt-8 cursor-pointer hover:bg-cobalt-500 active:bg-cobalt-700 active:scale-[0.98] active:shadow-[inset_4px_4px_4px_0_rgba(0,0,0,0.5)] transition-all duration-150">
         <Plus size={24} />
         Crear alarma
-      </button>
+      </Link>
     </aside>
   );
 }
