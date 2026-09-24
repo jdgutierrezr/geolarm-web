@@ -5,13 +5,28 @@ import { ArrowLeft, Info, MapPin, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useState, type SubmitEvent } from "react";
 import AlarmMap from "@/components/AlarmMap";
+import ColorPicker from "@/components/ColorPicker";
 import NavBar from "@/components/NavBar";
-import { alarms as defaultAlarms, getAlarmPoints } from "@/data/alarms";
+import {
+  alarms as defaultAlarms,
+  getAlarmPoints,
+  type Alarm,
+} from "@/data/alarms";
 import { getStoredAlarms, saveAlarms, useAlarms } from "@/lib/alarmStorage";
 import type { LatLng } from "@/lib/geo";
 
 const days = ["L", "M", "I", "J", "V", "S", "D"];
-const colors = ["#2563eb", "#ff6b4a", "#16a34a", "#eab308", "#9333ea"];
+const MIN_RADIUS = 10;
+const MAX_RADIUS = 500;
+
+/**
+ * Texto de ubicación para el input. En las alarmas por categoría no hay
+ * dirección, así que usa el nombre del lugar que coincide.
+ */
+const locationTextOf = (alarm: Alarm) =>
+  alarm.location.type === "exact"
+    ? alarm.location.address
+    : (getAlarmPoints(alarm)[0]?.label ?? "");
 
 type AlarmEditorProps = Readonly<{ mode: "create" | "edit"; alarmId?: string }>;
 
@@ -28,9 +43,7 @@ export default function AlarmEditor(props: AlarmEditorProps) {
   const [radius, setRadius] = useState(mode === "edit" ? existingAlarm.radius : 100);
   const [color, setColor] = useState(existingAlarm.color);
   const [address, setAddress] = useState(
-    mode === "edit" && existingAlarm.location.type === "exact"
-      ? existingAlarm.location.address
-      : "",
+    mode === "edit" ? locationTextOf(existingAlarm) : "",
   );
   const [position, setPosition] = useState<LatLng | null>(
     mode === "edit" ? initialPoint : null,
@@ -57,13 +70,12 @@ export default function AlarmEditor(props: AlarmEditorProps) {
               lng: -74.06,
             },
       );
-      setAddress(
-        existingAlarm.location.type === "exact"
-          ? existingAlarm.location.address
-          : "",
-      );
+      setAddress(locationTextOf(existingAlarm));
     });
   }, [existingAlarm, mode]);
+
+  const radiusPercent =
+    ((radius - MIN_RADIUS) / (MAX_RADIUS - MIN_RADIUS)) * 100;
 
   const toggleDay = (day: string) => {
     setSelectedDays((current) =>
@@ -161,19 +173,12 @@ export default function AlarmEditor(props: AlarmEditorProps) {
                   />
                 </span>
               </label>
-              <div className="flex shrink-0 gap-2 pb-1">
-                {colors.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    aria-label={`Color ${option}`}
-                    aria-pressed={color === option}
-                    onClick={() => setColor(option)}
-                    className={`size-6 rounded-full border-2 transition-transform ${color === option ? "scale-125 border-dark-900" : "border-transparent"}`}
-                    style={{ backgroundColor: option }}
-                  />
-                ))}
-              </div>
+              <label className="flex shrink-0 flex-col gap-1 text-xl font-medium">
+                <span>Color</span>
+                <span className="mt-1 block">
+                  <ColorPicker value={color} onChange={setColor} />
+                </span>
+              </label>
             </div>
 
             <fieldset className="flex flex-col gap-1 border-0 p-0">
@@ -212,12 +217,17 @@ export default function AlarmEditor(props: AlarmEditorProps) {
               <legend className="text-xl font-medium">Radio</legend>
               <input
                 type="range"
-                min="10"
-                max="500"
+                min={MIN_RADIUS}
+                max={MAX_RADIUS}
                 step="10"
                 value={radius}
                 onChange={(event) => setRadius(Number(event.target.value))}
-                className="h-5 w-full accent-coral-500"
+                // El relleno no es estilizable por CSS: se dibuja con un
+                // degradado que corta en el porcentaje del valor actual.
+                style={{
+                  background: `linear-gradient(to right, var(--coral-300) ${radiusPercent}%, var(--coral-50) ${radiusPercent}%)`,
+                }}
+                className="h-4 w-full cursor-pointer appearance-none rounded-full outline-none [&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-coral-500 [&::-moz-range-thumb]:shadow-md [&::-moz-range-track]:bg-transparent [&::-webkit-slider-thumb]:size-7 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-coral-500 [&::-webkit-slider-thumb]:shadow-md"
               />
               <div className="flex justify-between text-xs">
                 <span>10 metros</span>
@@ -237,7 +247,7 @@ export default function AlarmEditor(props: AlarmEditorProps) {
                       type="button"
                       aria-pressed={selected}
                       onClick={() => toggleDay(day)}
-                      className={`flex size-11 items-center justify-center rounded-full border border-marine-900 text-2xl font-semibold transition-colors ${selected ? "border-coral-500 bg-coral-500 text-dark-50 shadow-[inset_4px_4px_4px_rgb(0_0_0/0.2)]" : "bg-transparent"}`}
+                      className={`flex size-11 cursor-pointer items-center justify-center rounded-full border text-2xl font-semibold transition-colors ${selected ? "border-transparent bg-coral-500 text-dark-50 shadow-[inset_4px_4px_4px_rgb(0_0_0/0.2)]" : "border-marine-900 bg-transparent"}`}
                     >
                       {day}
                     </button>
@@ -282,6 +292,12 @@ export default function AlarmEditor(props: AlarmEditorProps) {
                 setLocationError("");
                 setAddress(`Punto seleccionado (${nextPosition.lat.toFixed(5)}, ${nextPosition.lng.toFixed(5)})`);
               }}
+            />
+            {/* Sombra interna: va en una capa aparte porque los tiles del
+                mapa taparían un box-shadow puesto en el contenedor. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-1000 rounded-xl shadow-[inset_0_0_24px_rgb(0_0_0/0.22)]"
             />
           </div>
         </div>
