@@ -5,7 +5,8 @@ import { ArrowLeft, Info, MapPin, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
 import AlarmMap from "@/components/AlarmMap";
-import { alarms } from "@/data/alarms";
+import { alarms, getAlarmPoints } from "@/data/alarms";
+import type { LatLng } from "@/lib/geo";
 
 const days = ["L", "M", "I", "J", "V", "S", "D"];
 const colors = ["#2563eb", "#ff6b4a", "#16a34a", "#eab308", "#9333ea"];
@@ -17,18 +18,25 @@ export default function AlarmEditor(props: AlarmEditorProps) {
   const router = useRouter();
   const existingAlarm = alarms.find(({ id }) => id === alarmId) ?? alarms[0];
   const [name, setName] = useState(mode === "edit" ? existingAlarm.name : "");
-  const [radius, setRadius] = useState(mode === "edit" ? 5 : 1);
+  const initialPoint =
+    existingAlarm.location.type === "exact"
+      ? existingAlarm.location.position
+      : getAlarmPoints(existingAlarm)[0]?.position ?? { lat: 4.65, lng: -74.06 };
+  const [radius, setRadius] = useState(mode === "edit" ? existingAlarm.radius : 100);
   const [color, setColor] = useState(existingAlarm.color);
+  const [address, setAddress] = useState(
+    mode === "edit" && existingAlarm.location.type === "exact"
+      ? existingAlarm.location.address
+      : "",
+  );
+  const [position, setPosition] = useState<LatLng | null>(
+    mode === "edit" ? initialPoint : null,
+  );
+  const [isSearching, setIsSearching] = useState(false);
+  const [locationError, setLocationError] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>(
     mode === "edit" ? ["L", "I", "J"] : [],
   );
-  let locationText = "Selecciona una ubicación en el mapa...";
-  if (mode === "edit") {
-    locationText =
-      existingAlarm.location.type === "exact"
-        ? existingAlarm.location.address
-        : "Supermercados cercanos";
-  }
 
   const toggleDay = (day: string) => {
     setSelectedDays((current) =>
@@ -36,6 +44,33 @@ export default function AlarmEditor(props: AlarmEditorProps) {
         ? current.filter((selected) => selected !== day)
         : [...current, day],
     );
+  };
+
+  const searchAddress = async () => {
+    const query = address.trim();
+    if (!query) return;
+
+    setIsSearching(true);
+    setLocationError("");
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`,
+        { headers: { Accept: "application/json" } },
+      );
+      if (!response.ok) throw new Error("Geocoding failed");
+      const results = (await response.json()) as Array<{ lat: string; lon: string; display_name: string }>;
+      const result = results[0];
+      if (!result) {
+        setLocationError("No encontramos esa dirección. Prueba con ciudad y país.");
+        return;
+      }
+      setPosition({ lat: Number(result.lat), lng: Number(result.lon) });
+      setAddress(result.display_name);
+    } catch {
+      setLocationError("No pudimos buscar la dirección. También puedes marcarla en el mapa.");
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const save = (event: SubmitEvent<HTMLFormElement>) => {
@@ -94,29 +129,51 @@ export default function AlarmEditor(props: AlarmEditorProps) {
 
             <fieldset className="flex flex-col gap-1 border-0 p-0">
               <legend className="text-xl font-medium">Ubicación</legend>
-              <button
-                type="button"
-                className="flex items-center gap-2 text-left text-base text-dark-600 transition-colors hover:text-coral-600"
-              >
-                <MapPin size={18} className="text-coral-500" />
-                {locationText}
-              </button>
+              <div className="flex items-center gap-3 rounded border border-marine-300 px-4 py-3 focus-within:border-cobalt-500 focus-within:ring-2 focus-within:ring-cobalt-500/20">
+                <MapPin size={18} className="shrink-0 text-coral-500" />
+                <input
+                  required
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void searchAddress();
+                    }
+                  }}
+                  placeholder="Escribe una dirección"
+                  className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-marine-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => void searchAddress()}
+                  disabled={isSearching || !address.trim()}
+                  aria-label="Buscar dirección"
+                  title="Buscar dirección"
+                  className="shrink-0 text-cobalt-600 transition-colors hover:text-cobalt-500 disabled:cursor-not-allowed disabled:text-marine-300"
+                >
+                  <Search size={20} />
+                </button>
+              </div>
+              <p className="text-xs text-dark-600">También puedes hacer clic en el mapa para fijar el punto.</p>
+              {locationError && <p className="text-xs text-red-600">{locationError}</p>}
             </fieldset>
 
             <fieldset className="flex flex-col gap-2 border-0 p-0">
               <legend className="text-xl font-medium">Radio</legend>
               <input
                 type="range"
-                min="1"
-                max="10"
+                min="10"
+                max="500"
+                step="10"
                 value={radius}
                 onChange={(event) => setRadius(Number(event.target.value))}
                 className="h-5 w-full accent-coral-500"
               />
               <div className="flex justify-between text-xs">
-                <span>1 metro</span>
-                <strong className="text-coral-500">{radius} metros</strong>
                 <span>10 metros</span>
+                <strong className="text-coral-500">{radius} metros</strong>
+                <span>500 metros</span>
               </div>
             </fieldset>
 
@@ -164,10 +221,17 @@ export default function AlarmEditor(props: AlarmEditorProps) {
         </form>
 
         <div className="relative flex min-h-[420px] min-w-0 flex-1 overflow-hidden rounded-xl bg-surface-300">
-          <AlarmMap selectedId={mode === "edit" ? existingAlarm.id : null} setSelectedId={() => undefined} />
-          <div
-            className="pointer-events-none absolute left-1/2 top-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-surface-50 bg-coral-500 shadow-[0_0_0_8px_rgb(255_163_143/0.45)]"
-            style={{ backgroundColor: color }}
+          <AlarmMap
+            selectedId={mode === "edit" ? existingAlarm.id : null}
+            setSelectedId={() => undefined}
+            previewPosition={position}
+            previewRadius={radius}
+            previewColor={color}
+            onMapClick={(nextPosition) => {
+              setPosition(nextPosition);
+              setLocationError("");
+              setAddress(`Punto seleccionado (${nextPosition.lat.toFixed(5)}, ${nextPosition.lng.toFixed(5)})`);
+            }}
           />
         </div>
       </div>

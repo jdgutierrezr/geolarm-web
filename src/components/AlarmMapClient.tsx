@@ -20,11 +20,13 @@ import {
   TileLayer,
   Tooltip,
   ZoomControl,
+  useMapEvents,
 } from "react-leaflet";
 import { LocateFixed } from "lucide-react";
 import { ALARMS_LIST_WIDTH } from "@/components/AlarmsList";
 import { alarms, getAlarmPoints, type AlarmPoint } from "@/data/alarms";
 import { useUserLocation } from "@/hooks/useUserLocation";
+import type { LatLng } from "@/lib/geo";
 
 const alarmPoints = alarms.flatMap(getAlarmPoints);
 
@@ -47,14 +49,29 @@ const locationMessages = {
   unavailable: "No pudimos obtener tu ubicación.",
 };
 
-type AlarmMapClientProps = {
+export type AlarmMapClientProps = {
   selectedId: string | null;
   setSelectedId: Dispatch<SetStateAction<string | null>>;
+  previewPosition?: LatLng | null;
+  previewRadius?: number;
+  previewColor?: string;
+  onMapClick?: (position: LatLng) => void;
 };
+
+function MapClickHandler({ onMapClick }: Pick<AlarmMapClientProps, "onMapClick">) {
+  useMapEvents({
+    click: (event) => onMapClick?.({ lat: event.latlng.lat, lng: event.latlng.lng }),
+  });
+  return null;
+}
 
 export default function AlarmMapClient({
   selectedId,
   setSelectedId,
+  previewPosition = null,
+  previewRadius = 0,
+  previewColor = "#ff6b4a",
+  onMapClick,
 }: AlarmMapClientProps) {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const userLocation = useUserLocation();
@@ -76,6 +93,12 @@ export default function AlarmMapClient({
 
     map.flyToBounds(boundsOf(points), { ...visibleArea, maxZoom: 16 });
   }, [map, selectedId]);
+
+  useEffect(() => {
+    if (map && previewPosition) {
+      map.flyTo(previewPosition, Math.max(map.getZoom(), 16));
+    }
+  }, [map, previewPosition]);
 
   // Clic en el fondo del mapa: deselecciona.
   useEffect(() => {
@@ -107,6 +130,7 @@ export default function AlarmMapClient({
         zoomControl={false}
         className="flex-1"
       >
+        <MapClickHandler onMapClick={onMapClick} />
         <ZoomControl position="topright" />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -162,6 +186,33 @@ export default function AlarmMapClient({
             </Tooltip>
           </CircleMarker>
         ))}
+
+        {previewPosition && previewRadius > 0 && (
+          <>
+            <Circle
+              center={previewPosition}
+              radius={previewRadius}
+              interactive={false}
+              pathOptions={{
+                color: previewColor,
+                weight: 2,
+                fillColor: previewColor,
+                fillOpacity: 0.25,
+              }}
+            />
+            <CircleMarker
+              center={previewPosition}
+              radius={9}
+              interactive={false}
+              pathOptions={{
+                color: "#ffffff",
+                weight: 2,
+                fillColor: previewColor,
+                fillOpacity: 1,
+              }}
+            />
+          </>
+        )}
 
         {userLocation.status === "granted" && (
           <>
